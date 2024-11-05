@@ -1,9 +1,10 @@
 # Import necessary libraries
 import yfinance as yf
-import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, classification_report
+import numpy as np
+from sklearn.preprocessing import MinMaxScaler
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense
+from tensorflow.keras.optimizers import Adam
 
 # Load historical stock data
 def load_data(stock_symbol, period='10y'):
@@ -12,73 +13,99 @@ def load_data(stock_symbol, period='10y'):
 
 # Feature engineering
 def create_features(data):
-    # Create moving averages as features
+    # Calculate moving averages
     data['MA1'] = data['Close']
-    data['MA3'] = data['Close'].rolling(window=3).mean()  # 3-day moving average
+    data['MA7'] = data['Close'].rolling(window=7).mean()
     
-    # Create a target column: 1 if price goes up, 0 if price goes down
-    data['Target'] = data['Close'].shift(-1) > data['Close']
-    data['Target'] = data['Target'].astype(int)
+    # Create target: 1 if price goes up the next day, 0 otherwise
+    data['Target'] = (data['Close'].shift(-1) > data['Close']).astype(int)
     
     # Drop NaN values created by rolling
     data = data.dropna()
     
     return data
 
-# Prepare data for training
-def prepare_data(data):
-    X = data[['MA1', 'MA3']]  # Feature columns
-    y = data['Target']          # Target column
+# Prepare data for LSTM
+def prepare_lstm_data(data, sequence_length=10):
+    # Select features and scale them
+    feature_columns = ['Close', 'MA1', 'MA7']
+    scaler = MinMaxScaler()
+    scaled_data = scaler.fit_transform(data[feature_columns])
     
-    # Split data into training and testing sets
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    return X_train, X_test, y_train, y_test
+    # Create sequences of data
+    X, y = [], []
+    for i in range(len(scaled_data) - sequence_length):
+        X.append(scaled_data[i:i+sequence_length])  # Add sequence of 10 days
+        y.append(data['Target'].iloc[i + sequence_length])  # Target for next day
+    
+    X, y = np.array(X), np.array(y)
+    
+    # Split into training and testing sets
+    split = int(0.8 * len(X))
+    X_train, X_test = X[:split], X[split:]
+    y_train, y_test = y[:split], y[split:]
+    
+    return X_train, X_test, y_train, y_test, scaler
 
-# Train and evaluate model
-def train_model(X_train, X_test, y_train, y_test):
-    model = LogisticRegression()
-    model.fit(X_train, y_train)
+# Build the LSTM model
+def build_lstm_model(input_shape):
+    model = Sequential()
+    model.add(LSTM(50, input_shape=input_shape, return_sequences=True))
+    model.add(LSTM(50))
+    model.add(Dense(1, activation='sigmoid'))  # Sigmoid for binary classification (up or down)
     
-    # Predict on test data
-    y_pred = model.predict(X_test)
+    model.compile(optimizer=Adam(learning_rate=0.1), loss='binary_crossentropy', metrics=['accuracy'])
+    return model
+
+# Train and evaluate LSTM model
+def train_lstm_model(X_train, X_test, y_train, y_test):
+    model = build_lstm_model((X_train.shape[1], X_train.shape[2]))
+    model.fit(X_train, y_train, epochs=35, batch_size=15, validation_data=(X_test, y_test), verbose=1)
     
-    # Evaluate model
-    accuracy = accuracy_score(y_test, y_pred)
-    print("Accuracy:", accuracy)
-    print(classification_report(y_test, y_pred))
+    # Evaluate the model on test data
+    loss, accuracy = model.evaluate(X_test, y_test)
+    print(f'Test Accuracy: {accuracy:.2f}')
     
     return model
 
-# Predict future price direction based on latest data
-def predict_future_direction(model, data):
-    # Use the latest available data point for prediction
-    latest_data = data[['MA1', 'MA3']].iloc[-1:].values  # Select last row and convert to numpy array
+# Predict future direction based on latest data
+def predict_future_direction_lstm(model, data, scaler, sequence_length=10):
+    # Get the last sequence of data for prediction
+    latest_data = data[['Close', 'MA1', 'MA7']].iloc[-sequence_length:]
+    scaled_data = scaler.transform(latest_data)  # Scale latest data
+    scaled_data = scaled_data.reshape((1, sequence_length, 3))  # Reshape for model input
     
-    # Predict with the model
-    prediction = model.predict(latest_data)
-    
-    # Interpret the prediction
-    if prediction[0] == 1:
+    # Predict with the LSTM model
+    prediction = model.predict(scaled_data)
+    if prediction[0][0] > 0.5:
+        confidence = str(round(prediction[0][0]*100,1))
         print("The model predicts the stock price will go up.")
+        print("Confidence level: "+ confidence + "%")
     else:
+        confidence = str(round((1-prediction[0][0])*100,1))
         print("The model predicts the stock price will go down.")
+        print("Confidence level: "+ confidence + "%")
     
-    return prediction[0]
+    return prediction[0][0] 
 
-# Putting it all together
-if __name__ == "__main__":
+def main(stock):
+    # Putting it all together
+
     # Load and preprocess data
-    stock_symbol = 'MCD'  # Example stock symbol (Apple)
-    stock_data = load_data(stock_symbol)
+    try:
+        stock_symbol = stock  # Example stock symbol 
+        stock_data = load_data(stock_symbol)
+    except:
+        return "Failed to find stock"
     
     # Feature engineering
     stock_data = create_features(stock_data)
     
-    # Prepare data
-    X_train, X_test, y_train, y_test = prepare_data(stock_data)
+    # Prepare data for LSTM
+    X_train, X_test, y_train, y_test, scaler = prepare_lstm_data(stock_data)
     
-    # Train and evaluate model
-    model = train_model(X_train, X_test, y_train, y_test)
-
-    # Predict future day's price:
-    predict_future_direction(model, stock_data)
+    # Train and evaluate LSTM model
+    model = train_lstm_model(X_train, X_test, y_train, y_test)
+    
+    # Predict future direction
+    return predict_future_direction_lstm(model, stock_data, scaler)
