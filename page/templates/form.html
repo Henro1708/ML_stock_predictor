@@ -1,0 +1,10 @@
+<div>
+    <h1>AI STOCK PREDICTOR</h1>
+    <form action="/page/check/" method="post">
+        {% csrf_token %}
+        <label for="your_name">Stock to predict: </label>
+        <input id="your_name" type="text" name="your_name" value="{{ current_name }}">
+        <input type="submit" value="OK">
+    </form>
+    <p>This is not financial advice, invest carefully</p>
+</div>
