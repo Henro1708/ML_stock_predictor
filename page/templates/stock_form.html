@@ -1,0 +1,15 @@
+<body> 
+    <h1>AI STOCK PREDICTOR</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Save</button>
+    </form>
+
+    {% if stock %}
+        <p>You entered: {{ stock }}</p>
+    {% endif %}
+    {% if result %}
+        <p>Result: {{ result }}</p>
+    {% endif %}
+</body>   

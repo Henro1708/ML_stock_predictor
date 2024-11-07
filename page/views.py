@@ -1,36 +1,35 @@
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from stock_values import ai_predictor
-from form import NameForm
+from form import stockForm
 from django.views.decorators.csrf import ensure_csrf_cookie
 
 # Create your views here.
-stock = 'AAPL'
-prediction = ai_predictor.get_stock_value()
-ret_values = prediction
-
-def get_prediction(request):
-    return HttpResponse(ret_values)
-
 @ensure_csrf_cookie
-def check(request):
-    return render(request, 'get_stock.html', {'result': str(prediction) })
-
-@ensure_csrf_cookie
-def get_name(request):
-    # if this is a POST request we need to process the form data
-    if request.method == "POST":
-        # create a form instance and populate it with data from the request:
-        form = NameForm(request.POST)
-        # check whether it's valid:
+def stock_view(request):
+    stock = None  # To store the submitted stock input
+    form = stockForm(request.POST)
+    context = {
+        'form' : form,
+        'loaded' : False,
+        'valid' : False,
+        'stock' : None,
+        'result' : 0.0,
+    }
+    if request.method == 'POST':
         if form.is_valid():
-            # process the data in form.cleaned_data as required
-            # ...
-            # redirect to a new URL:
-            return HttpResponseRedirect("/thanks/")
+            context['valid'] = True
 
-    # if a GET (or any other method) we'll create a blank form
+            # Save the form data to the variable
+            stock = form.cleaned_data['stock']
+            context['stock'] = stock
+
+            result = 7.3  #ai_predictor.get_stock_value(str(stock))
+            context['result'] = result
+
+            return render(request, 'stock_form.html', context)
     else:
-        form = NameForm()
+        form = stockForm()
 
-    return render(request, "form.html", {"form": form})
+    
+    return render(request, 'stock_form.html', context)

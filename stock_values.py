@@ -90,11 +90,11 @@ class ai_predictor:
         return prediction[0][0]
     
 
-    def get_stock_value():
+    def get_stock_value(stock):
         # Putting it all together
         # Load and preprocess data
         try:
-            stock_symbol = 'TSLA'  # Example stock symbol 
+            stock_symbol = stock  # Example stock symbol 
             stock_data = ai_predictor.load_data(stock_symbol)
         except:
             return "Failed to find stock"
