@@ -2,4 +2,4 @@ from django import forms
 
 
 class stockForm(forms.Form):
-    stock = forms.CharField(label="Stock", max_length=100)
+    stock = forms.CharField(required=False,label="Stock to predict:", max_length=100)

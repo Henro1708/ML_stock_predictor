@@ -1,5 +1,75 @@
-<body>
-    <h1>RESULT</h1> 
-    <p>result = {{ result }}</p>
-    <p>stock = {{ stock }}</p>
+<style>
+    .text_up{
+        position: relative;
+        bottom: 18px;
+        color: black;
+        font: 800 17px Arial;
+        -webkit-text-fill-color: #07f256;
+        -webkit-text-stroke: 1px;
+        text-align: center; 
+    }
+    .text_down{
+        position: relative;
+        bottom: 18px;
+        color: black;
+        font: 800 17px Arial;
+        -webkit-text-fill-color: #c3110b;
+        -webkit-text-stroke: 1px;
+        text-align: center; 
+    }
+    .header {
+        position: relative;
+        text-align: center;
+        bottom: 25px;
+        vertical-align: text-top;
+    
+        transform: scale(0.75);
+    }
+    .page {
+        background-color : #3a5261;
+    }
+    .window {
+        background-color: beige;
+        transform: scale(2);
+        position: fixed;
+        inset: 0px;
+        width: 20rem;
+        height: 10rem;
+        max-width: 100vw;
+        max-height: 100dvh;
+        margin: auto;
+        border: 2px solid black;
+        border-radius: 10px;
+    }
+    .confidence {
+        text-align: center;
+        position: relative;
+        bottom: 10px;
+        transform: scale(0.95);
+    }
+    .small {
+        position: relative;
+        bottom: 5px;
+        text-align: center;
+        font: 800 5px Arial;
+    }
+
+</style>
+
+<html>
+<title>
+    Results
+</title>
+<body class = page>
+    <div class = window>
+        <h1 class = header>AI PREDICTION:</h1> 
+        {% if prediction == 0 %}
+            <p class = text_down>{{stock}}'s price should go down.</p>
+        {% else %}
+            <p class = text_up>{{stock}}'s price should go up.</p>
+        {% endif %}
+        <p class = confidence>Prediction confidence: {{confidence}}%</p>
+        <p class = small>This is not financial advice, invest carefully</p>
+    </div>
 </body> 
+</html>

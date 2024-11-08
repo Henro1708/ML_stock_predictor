@@ -1,15 +1,90 @@
-<body> 
-    <h1>AI STOCK PREDICTOR</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Save</button>
-    </form>
+<style>
+    .text_up{
+        position: relative;
+        bottom: 18px;
+        color: black;
+        font: 800 17px Arial;
+        -webkit-text-fill-color: #07f256;
+        -webkit-text-stroke: 1px;
+        text-align: center; 
+    }
+    .text_down{
+        position: relative;
+        bottom: 18px;
+        color: black;
+        font: 800 17px Arial;
+        -webkit-text-fill-color: #c3110b;
+        -webkit-text-stroke: 1px;
+        text-align: center; 
+    }
+    .header {
+        position: relative;
+        text-align: center;
+        bottom: 25px;
+        vertical-align: text-top;
+    
+        transform: scale(0.75);
+    }
+    .page {
+        background-color : #3a5261;
+    }
+    .window {
+        background-color: beige;
+        transform: scale(2);
+        position: fixed;
+        inset: 0px;
+        width: 20rem;
+        height: 10rem;
+        max-width: 100vw;
+        max-height: 100dvh;
+        margin: auto;
+        border: 2px solid black;
+        border-radius: 10px;
+    }
+    .form {
+        text-align: center;
+        position: relative;
+        bottom: 30px;
+        transform: scale(0.95);
+        
+    }
+    .button {
+        position: relative;
+        bottom:13px;
+        transform: scale(0.60);
+        display: inline-block;
+        outline: 0;
+        cursor: pointer;
+        border: none;
+        padding: 0 56px;
+        height: 45px;
+        line-height: 45px;
+        border-radius: 7px;
+        background-color: #0070f3;
+        color: white;
+        font-weight: 400;
+        font-size: 16px;
+        box-shadow: 0 4px 14px 0 rgb(0 118 255 / 39%);
+        transition: background 0.2s ease,color 0.2s ease,box-shadow 0.2s ease;
+        :hover{
+            background: rgba(0,118,255,0.9);
+            box-shadow: 0 6px 20px rgb(0 118 255 / 23%);
+        }
+    }
+</style>
 
-    {% if stock %}
-        <p>You entered: {{ stock }}</p>
-    {% endif %}
-    {% if result %}
-        <p>Result: {{ result }}</p>
-    {% endif %}
+<html>
+<title>
+    AI Predictor
+</title>
+<body class = page> 
+    <div class = window>
+        <h1 class = header>AI STOCK PREDICTOR</h1>
+        <form method="post" class = form>
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button class = button type="submit">Predict</button>
+        </form>
+    </div>
 </body>
+</html>

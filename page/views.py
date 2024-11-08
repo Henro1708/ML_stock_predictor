@@ -36,10 +36,16 @@ def stock_view(request):
 
 def result(request):
     stock = request.GET.get('stock')
+    result =  ai_predictor.get_stock_value(stock)
+    context = {
+        'result' : result,
+        'stock' : stock,
+        'prediction' : 0,
+        'confidence' : round((1 - result)*100,1),
+    }
 
-    result = ai_predictor.get_stock_value(stock)
-    
-    context = {'result' : result,
-               'stock' : stock,
-               }
+    if result > 0.5:
+        context['prediction'] = 1
+        context['confidence'] = round(result*100,1)
+
     return render(request, 'result.html', context)
